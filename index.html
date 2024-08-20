@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>APS Viewer Systems Browser Extension</title>
+    <meta charset="utf-8" />
+    <link
+      rel="shortcut icon"
+      href="https://github.com/Autodesk-Forge/learn.forge.viewmodels/raw/master/img/favicon.ico"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://unpkg.com/inspire-tree@4.3.1/dist/inspire-tree.js"></script>
+    <script src="https://unpkg.com/inspire-tree-dom@4.0.6/dist/inspire-tree-dom.min.js"></script>
+    <!-- Autodesk Platform Services Viewer files -->
+    <link
+      rel="stylesheet"
+      href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
+      type="text/css"
+    />
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+    <!-- Extension -->
+    <script src="./ExternalTreeExtension.js"></script>
+    <!-- this project files -->
+    <style type="text/css">
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        font-family: ArtifaktElement;
+      }
+
+      #header, #sidebar, #apsViewer {
+        position: absolute;
+      }
+
+      #header {
+          height: 3em;
+          width: 100%;
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-between;
+          align-items: center;
+      }
+
+      #sidebar {
+          width: 25%;
+          right: 0;
+          top: 3em;
+          bottom: 0;
+          overflow-y: scroll;
+      }
+
+      #apsViewer {
+          width: 75%;
+          left: 0;
+          top: 3em;
+          bottom: 0;
+      }
+
+      #header > * {
+          height: 2em;
+          margin: 0 0.5em;
+      }
+
+      #header .title {
+          height: auto;
+          margin-right: auto;
+      }
+
+      #tree {
+          margin: 0.5em;
+      }
+
+      @media (max-width: 768px) {
+          #sidebar {
+              width: 100%;
+              top: 3em;
+              bottom: 75%;
+          }
+          #apsViewer {
+              width: 100%;
+              top: 25%;
+              bottom: 0;
+          }
+      }
+
+      .icon:before {
+        background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/apps-16.svg); /* or https://raw.githubusercontent.com/primer/octicons/main/icons/stack-16.svg */
+        background-size: cover;
+      }
+    </style>
+  </head>
+
+  <body
+    onload="initAPSViewer('dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6am9hby1tYXJ0aW5zLWRlbW8tYnVja2V0L09mZmljZS5ydnQ')"
+  >
+    <div id="header" class="container">
+      <a href="http://aps.autodesk.com" href="#"
+        ><img
+          alt="Autodesk Platform Services"
+          src="https://cdn.autodesk.io/logo/black/stacked.png"
+          height="30"
+      /></a>
+      <a href="https://github.com/JoaoMartins-callmeJohn/aps-viewer-external-tree" href="#"
+        >Source Code Here!</a>
+    </div>
+    <div id="apsViewer"></div>
+    <div id="sidebar">
+      <div id="tree">HERE GOES THE TREE</div>
+    </div>
+  </body>
+
+  <script>
+    var _access_token = null;
+    var viewer = null;
+
+    async function getToken() {
+      await fetch(
+        "https://lowlblo75l.execute-api.us-east-1.amazonaws.com/default/GetTokenWithAHub"
+      )
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          _access_token = data.access_token;
+        });
+    }
+
+    async function initAPSViewer(urn) {
+      await getToken();
+
+      const options = {
+        env: "AutodeskProduction",
+        accessToken: _access_token,
+        isAEC: true,
+      };
+
+      Autodesk.Viewing.Initializer(options, () => {
+        const div = document.getElementById("apsViewer");
+
+        const config = {
+          extensions: ["ExternalTreeExtension", "Autodesk.DocumentBrowser"],
+        };
+
+        viewer = new Autodesk.Viewing.Private.GuiViewer3D(div, config);
+        viewer.start();
+        viewer.setTheme("light-theme");
+
+        Autodesk.Viewing.Document.load(`urn:${urn}`, (doc) => {
+          viewer
+            .loadDocumentNode(
+              doc, doc.getRoot().getDefaultGeometry()
+            )
+            .then((i) => {
+              // documented loaded, any action?
+            });
+        });
+      });
+    }
+  </script>
+</html>
